@@ -1,0 +1,23 @@
+{
+  "@@locale": "en",
+  "themeMode": "Theme Mode",
+  "systemMode": "Follow System",
+  "lightMode": "Light Mode",
+  "darkMode": "Dark Mode",
+  "createConfig": "Create Config",
+  "manageConfig": "Manage Config",
+  "noConfigFound": "No configuration found",
+  "settings": "Settings",
+  "appearance": "Appearance",
+  "language": "Language",
+  "about": "About Project",
+  "projectDescription": "A GUI for editing configs of Dniel97-segatools.",
+  "version": "Version",
+  "githubRepo": "GitHub Repository",
+  "githubSub": "View source code or submit issues",
+  "overview": "Overview",
+  "dataManagement": "Data Management",
+  "configFolder": "Config Storage Location",
+  "configFolderDesc": "Project lists and logs are saved in %AppData%/configui",
+  "openFolder": "Open Folder"
+}

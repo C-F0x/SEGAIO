@@ -1,0 +1,23 @@
+{
+  "@@locale": "zh_TW",
+  "themeMode": "主題模式",
+  "systemMode": "跟隨系統",
+  "lightMode": "淺色模式",
+  "darkMode": "深色模式",
+  "createConfig": "建立配置",
+  "manageConfig": "管理配置",
+  "noConfigFound": "未發現設定檔",
+  "settings": "設定",
+  "appearance": "外觀設定",
+  "language": "語言",
+  "about": "關於專案",
+  "projectDescription": "一個用於編輯 Dniel97-segatools 配置的圖形介面工具",
+  "version": "版本",
+  "githubRepo": "GitHub 儲存庫",
+  "githubSub": "查看原始碼或提交 Issue",
+  "overview": "總覽",
+  "dataManagement": "數據管理",
+  "configFolder": "配置檔案存儲位置",
+  "configFolderDesc": "所有的項目列表和配置記錄均保存在 %AppData%/configui 中",
+  "openFolder": "打開資料夾"
+}

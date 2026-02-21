@@ -78,7 +78,7 @@ class OverviewPage extends StatelessWidget {
                 title: Text(loc.githubRepo),
                 subtitle: Text(loc.githubSub),
                 trailing: const Icon(FluentIcons.open_in_new_window, size: 12),
-                onPressed: () => launchUrl(Uri.parse('https://github.com/')),
+                onPressed: () => launchUrl(Uri.parse('https://github.com/C-F0x/configui')),
               ),
             ],
           ),

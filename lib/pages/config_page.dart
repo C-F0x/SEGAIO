@@ -6,7 +6,6 @@ import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart' show rootBundle;
-
 import 'modify_page.dart';
 class Project {
   final String id;
@@ -120,8 +119,8 @@ class _ConfigPageState extends State<ConfigPage> {
       final bool ok = await _modifyKey.currentState?.triggerSaveAll() ?? false;
       if (mounted && ok) {
         displayInfoBar(context, builder: (c, close) => const InfoBar(
-          title: Text('保存成功'),
-          content: Text('所有配置已成功同步至 segatools.ini'),
+          title: Text('Saved'),
+          content: Text('Synced'),
           severity: InfoBarSeverity.success,
         ));
       }
@@ -148,26 +147,26 @@ class _ConfigPageState extends State<ConfigPage> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => ContentDialog(
-          title: const Text('确认删除项目'),
+          title: const Text('Confirm Deleting?'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('确定要从列表中移除配置 "${project.name}" 吗？'),
+              Text('Sure about deleting "${project.name}" '),
               const SizedBox(height: 16),
               Checkbox(
                 checked: deleteIniFile,
                 onChanged: (v) => setDialogState(() => deleteIniFile = v ?? false),
-                content: const Text('同时删除目标目录下的 segatools.ini'),
+                content: const Text('BTW Delete binded segatools.ini'),
               ),
             ],
           ),
           actions: [
-            Button(child: const Text('取消'), onPressed: () => Navigator.pop(context, 'cancel')),
+            Button(child: const Text('Cancel'), onPressed: () => Navigator.pop(context, 'cancel')),
             FilledButton(
               style: ButtonStyle(backgroundColor: WidgetStateProperty.all(Colors.red)),
               onPressed: () => Navigator.pop(context, 'delete'),
-              child: const Text('确认删除'),
+              child: const Text('Confirm Deleting'),
             ),
           ],
         ),
@@ -190,7 +189,7 @@ class _ConfigPageState extends State<ConfigPage> {
   Future<void> _openFolder(String path) async {
     final Uri uri = Uri.file(path);
     if (!await launchUrl(uri)) {
-      if (mounted) displayInfoBar(context, builder: (c, close) => const InfoBar(title: Text('无法打开路径'), severity: InfoBarSeverity.error));
+      if (mounted) displayInfoBar(context, builder: (c, close) => const InfoBar(title: Text('Unable to open the path'), severity: InfoBarSeverity.error));
     }
   }
 
@@ -239,7 +238,7 @@ class _ConfigPageState extends State<ConfigPage> {
               ],
             ),
             actions: [
-              Button(child: const Text('取消'), onPressed: () => Navigator.pop(context)),
+              Button(child: const Text('Cancel'), onPressed: () => Navigator.pop(context)),
               FilledButton(
                 onPressed: () async {
                   if (nameController.text.isEmpty || pathController.text.isEmpty) return;
@@ -264,7 +263,7 @@ class _ConfigPageState extends State<ConfigPage> {
                     if (widget.onProjectCreated != null) widget.onProjectCreated!(newProject);
                   } catch (_) {}
                 },
-                child: const Text('保存并创建'),
+                child: const Text('Create && Save'),
               ),
             ],
           );
@@ -282,7 +281,7 @@ class _ConfigPageState extends State<ConfigPage> {
       return ScaffoldPage(
         header: const PageHeader(title: Text("NEW")),
         content: Center(
-          child: FilledButton(child: const Text("立即开始创建"), onPressed: () => _showCreateDialog(context)),
+          child: FilledButton(child: const Text("Constantly Create"), onPressed: () => _showCreateDialog(context)),
         ),
       );
     }
@@ -314,7 +313,7 @@ class _ConfigPageState extends State<ConfigPage> {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 200, minWidth: 80),
                   child: TextBox(
-                    placeholder: '搜索配置项...',
+                    placeholder: 'Search...',
                     suffix: const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),
                       child: Icon(FluentIcons.search, size: 14),
@@ -332,7 +331,7 @@ class _ConfigPageState extends State<ConfigPage> {
                 icon: _isSaving
                     ? const SizedBox(width: 16, height: 16, child: ProgressRing(strokeWidth: 2))
                     : const Icon(FluentIcons.save),
-                label: const Text('全部保存'),
+                label: const Text('SAVE'),
                 onPressed: _isSaving ? null : _handleGlobalSave,
               ),
             ],
@@ -425,7 +424,7 @@ class _ConfigPageState extends State<ConfigPage> {
         children: [
           Expanded(
             child: Tooltip(
-              message: '点击在文件资源管理器中打开',
+              message: 'Click to Open With File Explorer',
               child: GestureDetector(
                 onTap: () => _openFolder(project.path),
                 child: MouseRegion(
@@ -449,7 +448,7 @@ class _ConfigPageState extends State<ConfigPage> {
             ),
           ),
           const SizedBox(width: 20),
-          Text("创建时间: ${project.createdAt}", style: const TextStyle(fontSize: 12, color: Colors.grey)),
+          Text("Created at : ${project.createdAt}", style: TextStyle(fontSize: 12, color: Colors.orange)),
         ],
       ),
     );

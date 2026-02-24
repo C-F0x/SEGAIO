@@ -200,12 +200,27 @@ class BoardConfigState extends State<BoardConfig> {
   Widget build(BuildContext context) {
     if (_isLoading) return const SizedBox.shrink();
 
+    final labels = [
+      "Keychip ID",
+      "Subnet Mask",
+      "PCBID SerialNo",
+      "Enable System",
+      "Free Play",
+      "LAN Install",
+      "Monitor",
+      "Cab Type"
+    ];
+    final bool hasMatch = widget.searchKeyword.isEmpty ||
+        labels.any((l) => l.toLowerCase().contains(widget.searchKeyword.toLowerCase()));
+
+    if (!hasMatch) return const SizedBox.shrink();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader("Board Settings", FluentIcons.settings),
         _buildSettingItem(
-          label: "Keychip ID [keychip]",
+          label: "Keychip ID",
           error: _keychipIdError,
           child: TextBox(
             controller: _keychipIdController,
@@ -244,7 +259,7 @@ class BoardConfigState extends State<BoardConfig> {
             ),
           ),
           _buildSettingItem(
-            label: "LAN Install (DIPSW1)",
+            label: "LAN Install",
             child: ComboBox<int>(
               value: _dipsw1,
               items: const [
@@ -255,7 +270,7 @@ class BoardConfigState extends State<BoardConfig> {
             ),
           ),
           _buildSettingItem(
-            label: "Monitor (DIPSW2)",
+            label: "Monitor",
             child: ComboBox<int>(
               value: _dipsw2,
               items: const [
@@ -266,7 +281,7 @@ class BoardConfigState extends State<BoardConfig> {
             ),
           ),
           _buildSettingItem(
-            label: "Cab Type (DIPSW3)",
+            label: "Cab Type",
             child: ComboBox<int>(
               value: _dipsw3,
               items: const [

@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "configui" "\0"
+            VALUE "FileDescription", "segacfg" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "configui" "\0"
+            VALUE "InternalName", "segacfg" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "configui.exe" "\0"
-            VALUE "ProductName", "configui" "\0"
+            VALUE "OriginalFilename", "segacfg.exe" "\0"
+            VALUE "ProductName", "segacfg" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

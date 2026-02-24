@@ -128,61 +128,84 @@ class LedConfigState extends State<LedConfig> {
   Widget build(BuildContext context) {
     if (_isLoading) return const SizedBox.shrink();
 
+    final List<String> searchTargets = [
+      "LED settings", "Enable LED Emulation", "Billboard LED", "Controller LED",
+      "Pipe Output", "Serial Output", "OpeNITHM", "Serial Port", "Baud Rate"
+    ];
+    final bool hasMatch = widget.searchKeyword.isEmpty ||
+        searchTargets.any((l) => l.toLowerCase().contains(widget.searchKeyword.toLowerCase()));
+
+    if (!hasMatch) return const SizedBox.shrink();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader("LED settings", FluentIcons.lightbulb),
         _buildSwitchItem("Enable LED Emulation", _led15093Enable, (v) => setState(() => _led15093Enable = v)),
-        InfoLabel(
-          label: "Billboard LED",
-          child: Row(
-            children: [
-              _buildSwitchItem("Pipe Output", _cabLedOutputPipe, (v) => setState(() => _cabLedOutputPipe = v)),
-              const SizedBox(width: 20),
-              _buildSwitchItem("Serial Output", _cabLedOutputSerial, (v) => setState(() => _cabLedOutputSerial = v)),
-            ],
+
+        if (widget.searchKeyword.isEmpty ||
+            "billboard led".contains(widget.searchKeyword.toLowerCase()) ||
+            "pipe output".contains(widget.searchKeyword.toLowerCase()) ||
+            "serial output".contains(widget.searchKeyword.toLowerCase()))
+          InfoLabel(
+            label: "Billboard LED",
+            child: Row(
+              children: [
+                _buildSwitchItem("Pipe Output", _cabLedOutputPipe, (v) => setState(() => _cabLedOutputPipe = v)),
+                const SizedBox(width: 20),
+                _buildSwitchItem("Serial Output", _cabLedOutputSerial, (v) => setState(() => _cabLedOutputSerial = v)),
+              ],
+            ),
           ),
-        ),
+
         const SizedBox(height: 10),
-        InfoLabel(
-          label: "Controller LED",
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+
+        if (widget.searchKeyword.isEmpty ||
+            "controller led".contains(widget.searchKeyword.toLowerCase()) ||
+            "openithm".contains(widget.searchKeyword.toLowerCase()))
+          InfoLabel(
+            label: "Controller LED",
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    _buildSwitchItem("Pipe Output", _controllerLedOutputPipe, (v) => setState(() => _controllerLedOutputPipe = v)),
+                    const SizedBox(width: 20),
+                    _buildSwitchItem("Serial Output", _controllerLedOutputSerial, (v) => setState(() => _controllerLedOutputSerial = v)),
+                  ],
+                ),
+                _buildSwitchItem("Use OpeNITHM Protocol", _controllerLedOutputOpeNITHM, (v) => setState(() => _controllerLedOutputOpeNITHM = v)),
+              ],
+            ),
+          ),
+
+        if (widget.searchKeyword.isEmpty ||
+            "serial port".contains(widget.searchKeyword.toLowerCase()) ||
+            "baud rate".contains(widget.searchKeyword.toLowerCase()))
+          Row(
             children: [
-              Row(
-                children: [
-                  _buildSwitchItem("Pipe Output", _controllerLedOutputPipe, (v) => setState(() => _controllerLedOutputPipe = v)),
-                  const SizedBox(width: 20),
-                  _buildSwitchItem("Serial Output", _controllerLedOutputSerial, (v) => setState(() => _controllerLedOutputSerial = v)),
-                ],
+              Expanded(
+                child: InfoLabel(
+                  label: "Serial Port",
+                  child: TextBox(
+                    controller: _portController,
+                    placeholder: "COM5",
+                  ),
+                ),
               ),
-              _buildSwitchItem("Use OpeNITHM Protocol", _controllerLedOutputOpeNITHM, (v) => setState(() => _controllerLedOutputOpeNITHM = v)),
+              const SizedBox(width: 20),
+              Expanded(
+                child: InfoLabel(
+                  label: "Baud Rate",
+                  child: TextBox(
+                    controller: _baudController,
+                    placeholder: "921600",
+                  ),
+                ),
+              ),
             ],
           ),
-        ),
-        Row(
-          children: [
-            Expanded(
-              child: InfoLabel(
-                label: "Serial Port",
-                child: TextBox(
-                  controller: _portController,
-                  placeholder: "COM5",
-                ),
-              ),
-            ),
-            const SizedBox(width: 20),
-            Expanded(
-              child: InfoLabel(
-                label: "Baud Rate",
-                child: TextBox(
-                  controller: _baudController,
-                  placeholder: "921600",
-                ),
-              ),
-            ),
-          ],
-        ),
       ],
     );
   }

@@ -15,12 +15,14 @@ class ModifyPage extends StatefulWidget {
   final String projectPath;
   final Map<String, dynamic> configData;
   final String searchKeyword;
+  final bool isGlobalRelative;
 
   const ModifyPage({
     super.key,
     required this.projectPath,
     required this.configData,
     this.searchKeyword = "",
+    required this.isGlobalRelative,
   });
 
   @override
@@ -28,14 +30,37 @@ class ModifyPage extends StatefulWidget {
 }
 
 class ModifyPageState extends State<ModifyPage> {
-  final GlobalKey<PathConfigState> _pathKey = GlobalKey();
-  final GlobalKey<DeviceConfigState> _deviceKey = GlobalKey();
-  final GlobalKey<NetworkConfigState> _networkKey = GlobalKey();
-  final GlobalKey<BoardConfigState> _boardKey = GlobalKey();
-  final GlobalKey<IoConfigState> _ioKey = GlobalKey();
-  final GlobalKey<InputConfigState> _inputKey = GlobalKey();
-  final GlobalKey<LedConfigState> _ledKey = GlobalKey();
-  final GlobalKey<MiscHooksConfigState> _miscKey = GlobalKey();
+  late GlobalKey<PathConfigState> _pathKey;
+  late GlobalKey<DeviceConfigState> _deviceKey;
+  late GlobalKey<NetworkConfigState> _networkKey;
+  late GlobalKey<BoardConfigState> _boardKey;
+  late GlobalKey<IoConfigState> _ioKey;
+  late GlobalKey<InputConfigState> _inputKey;
+  late GlobalKey<LedConfigState> _ledKey;
+  late GlobalKey<MiscHooksConfigState> _miscKey;
+
+  @override
+  void initState() {
+    super.initState();
+    _generateKeys();
+  }
+
+  void _generateKeys() {
+    _pathKey = GlobalKey();
+    _deviceKey = GlobalKey();
+    _networkKey = GlobalKey();
+    _boardKey = GlobalKey();
+    _ioKey = GlobalKey();
+    _inputKey = GlobalKey();
+    _ledKey = GlobalKey();
+    _miscKey = GlobalKey();
+  }
+
+  void reloadData() {
+    setState(() {
+      _generateKeys();
+    });
+  }
 
   Future<bool> triggerSaveAll() async {
     final Map<String, Map<String, String>> fullConfig = {};
@@ -77,27 +102,60 @@ class ModifyPageState extends State<ModifyPage> {
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> children = [
+      PathConfig(
+        key: _pathKey,
+        projectPath: widget.projectPath,
+        searchKeyword: widget.searchKeyword,
+        isGlobalRelative: widget.isGlobalRelative,
+      ),
+      DeviceConfig(
+        key: _deviceKey,
+        projectPath: widget.projectPath,
+        searchKeyword: widget.searchKeyword,
+        isGlobalRelative: widget.isGlobalRelative,
+      ),
+      NetworkConfig(
+        key: _networkKey,
+        projectPath: widget.projectPath,
+        searchKeyword: widget.searchKeyword,
+      ),
+      BoardConfig(
+        key: _boardKey,
+        projectPath: widget.projectPath,
+        searchKeyword: widget.searchKeyword,
+      ),
+      IoConfig(
+        key: _ioKey,
+        projectPath: widget.projectPath,
+        searchKeyword: widget.searchKeyword,
+        isGlobalRelative: widget.isGlobalRelative,
+      ),
+      InputConfig(
+        key: _inputKey,
+        projectPath: widget.projectPath,
+        searchKeyword: widget.searchKeyword,
+      ),
+      LedConfig(
+        key: _ledKey,
+        projectPath: widget.projectPath,
+        searchKeyword: widget.searchKeyword,
+      ),
+      MiscHooksConfig(
+        key: _miscKey,
+        projectPath: widget.projectPath,
+        searchKeyword: widget.searchKeyword,
+      ),
+    ];
+
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          children: [
-            PathConfig(key: _pathKey, projectPath: widget.projectPath, searchKeyword: widget.searchKeyword),
+          children: children.expand((widget) => [
+            widget,
             const SizedBox(height: 16),
-            DeviceConfig(key: _deviceKey, projectPath: widget.projectPath, searchKeyword: widget.searchKeyword),
-            const SizedBox(height: 16),
-            NetworkConfig(key: _networkKey, projectPath: widget.projectPath, searchKeyword: widget.searchKeyword),
-            const SizedBox(height: 16),
-            BoardConfig(key: _boardKey, projectPath: widget.projectPath, searchKeyword: widget.searchKeyword),
-            const SizedBox(height: 16),
-            IoConfig(key: _ioKey, projectPath: widget.projectPath, searchKeyword: widget.searchKeyword),
-            const SizedBox(height: 16),
-            InputConfig(key: _inputKey, projectPath: widget.projectPath, searchKeyword: widget.searchKeyword),
-            const SizedBox(height: 16),
-            LedConfig(key: _ledKey, projectPath: widget.projectPath, searchKeyword: widget.searchKeyword),
-            const SizedBox(height: 16),
-            MiscHooksConfig(key: _miscKey, projectPath: widget.projectPath, searchKeyword: widget.searchKeyword),
-          ],
+          ]).toList()..removeLast(),
         ),
       ),
     );

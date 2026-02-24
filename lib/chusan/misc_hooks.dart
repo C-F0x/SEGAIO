@@ -110,6 +110,20 @@ class MiscHooksConfigState extends State<MiscHooksConfig> {
   Widget build(BuildContext context) {
     if (_isLoading) return const SizedBox.shrink();
 
+    final List<String> searchTargets = [
+      "Misc. hooks settings",
+      "Enable Graphics Hook",
+      "Windowed Mode",
+      "Show Window Frame",
+      "DPI Awareness",
+      "Target Monitor"
+    ];
+
+    final bool hasMatch = widget.searchKeyword.isEmpty ||
+        searchTargets.any((l) => l.toLowerCase().contains(widget.searchKeyword.toLowerCase()));
+
+    if (!hasMatch) return const SizedBox.shrink();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -119,24 +133,27 @@ class MiscHooksConfigState extends State<MiscHooksConfig> {
         _buildSwitchItem("Show Window Frame", _framed, (v) => setState(() => _framed = v)),
         _buildSwitchItem("DPI Awareness", _dpiAware, (v) => setState(() => _dpiAware = v)),
 
-        const SizedBox(height: 16),
-        InfoLabel(
-          label: "Target Monitor (Fullscreen only, 0=Primary)",
-          child: SizedBox(
-            width: 200,
-            child: NumberBox<int>(
-              value: _monitorValue,
-              onChanged: (v) {
-                if (v != null) {
-                  setState(() => _monitorValue = v);
-                }
-              },
-              min: 0,
-              max: 16,
-              mode: SpinButtonPlacementMode.inline,
+        if (widget.searchKeyword.isEmpty || "target monitor".contains(widget.searchKeyword.toLowerCase()))
+          Padding(
+            padding: const EdgeInsets.only(top: 16.0),
+            child: InfoLabel(
+              label: "Target Monitor (Fullscreen only, 0=Primary)",
+              child: SizedBox(
+                width: 200,
+                child: NumberBox<int>(
+                  value: _monitorValue,
+                  onChanged: (v) {
+                    if (v != null) {
+                      setState(() => _monitorValue = v);
+                    }
+                  },
+                  min: 0,
+                  max: 16,
+                  mode: SpinButtonPlacementMode.inline,
+                ),
+              ),
             ),
           ),
-        ),
       ],
     );
   }

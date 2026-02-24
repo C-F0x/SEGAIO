@@ -6,11 +6,13 @@ import 'package:file_picker/file_picker.dart';
 class IoConfig extends StatefulWidget {
   final String projectPath;
   final String searchKeyword;
+  final bool isGlobalRelative;
 
   const IoConfig({
     super.key,
     required this.projectPath,
     this.searchKeyword = "",
+    required this.isGlobalRelative,
   });
 
   @override
@@ -107,7 +109,12 @@ class IoConfigState extends State<IoConfig> {
     );
     if (result != null) {
       setState(() {
-        controller.text = p.relative(result.files.single.path!, from: widget.projectPath);
+        String pickedPath = result.files.single.path!;
+        if (widget.isGlobalRelative) {
+          controller.text = p.relative(pickedPath, from: widget.projectPath);
+        } else {
+          controller.text = p.normalize(pickedPath);
+        }
       });
     }
   }
@@ -173,6 +180,19 @@ class IoConfigState extends State<IoConfig> {
   Widget build(BuildContext context) {
     if (_isLoading) return const SizedBox.shrink();
 
+    final List<String> labels = [
+      "Custom IO settings",
+      "AimeIO DLL Path",
+      "Dual DLL Mode",
+      "chu2to3 DLL Path",
+      "x86 DLL Path",
+      "x64 DLL Path",
+    ];
+    final bool hasMatch = widget.searchKeyword.isEmpty ||
+        labels.any((l) => l.toLowerCase().contains(widget.searchKeyword.toLowerCase()));
+
+    if (!hasMatch) return const SizedBox.shrink();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -189,16 +209,16 @@ class IoConfigState extends State<IoConfig> {
           ]),
         ),
         _buildSettingItem(
-          label: "Dual DLL Mode (x86 + x64)",
+          label: "Dual DLL Mode",
           child: ToggleSwitch(
             checked: _isDualDll,
             onChanged: (v) => setState(() => _isDualDll = v),
-            content: Text(_isDualDll ? "Dual DLL (path32/64)" : "Single DLL (path)"),
+            content: Text(_isDualDll ? "Dual DLL" : "Single DLL"),
           ),
         ),
         if (!_isDualDll)
           _buildSettingItem(
-            label: "32bit DLL Path (path)",
+            label: "chu2to3 Chuniio DLL Path",
             child: Row(children: [
               Expanded(child: TextBox(controller: _chuniioPathController, placeholder: "chuniio.dll")),
               const SizedBox(width: 8),
@@ -210,7 +230,7 @@ class IoConfigState extends State<IoConfig> {
           )
         else ...[
           _buildSettingItem(
-            label: "x86 DLL Path (path32)",
+            label: "x86 Chuniio DLL Path",
             child: Row(children: [
               Expanded(child: TextBox(controller: _chuniioPath32Controller, placeholder: "chuniio_x86.dll")),
               const SizedBox(width: 8),
@@ -221,7 +241,7 @@ class IoConfigState extends State<IoConfig> {
             ]),
           ),
           _buildSettingItem(
-            label: "x64 DLL Path (path64)",
+            label: "x64 Chuniio DLL Path",
             child: Row(children: [
               Expanded(child: TextBox(controller: _chuniioPath64Controller, placeholder: "chuniio_x64.dll")),
               const SizedBox(width: 8),

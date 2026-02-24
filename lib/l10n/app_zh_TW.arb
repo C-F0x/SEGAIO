@@ -18,6 +18,6 @@
   "overview": "總覽",
   "dataManagement": "數據管理",
   "configFolder": "配置檔案存儲位置",
-  "configFolderDesc": "所有的項目列表和配置記錄均保存在 %AppData%/configui 中",
+  "configFolderDesc": "所有的項目列表和配置記錄均保存在 %AppData%/segacfg 中",
   "openFolder": "打開資料夾"
 }

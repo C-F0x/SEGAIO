@@ -154,12 +154,25 @@ class NetworkConfigState extends State<NetworkConfig> {
   Widget build(BuildContext context) {
     if (_isLoading) return const SizedBox.shrink();
 
+    final List<String> searchTargets = [
+      "Network Settings",
+      "Server Address",
+      "Status",
+      "Enable NetEnv",
+      "IP Suffix"
+    ];
+
+    final bool hasMatch = widget.searchKeyword.isEmpty ||
+        searchTargets.any((l) => l.toLowerCase().contains(widget.searchKeyword.toLowerCase()));
+
+    if (!hasMatch) return const SizedBox.shrink();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader("Network Settings", FluentIcons.network_tower),
         _buildSettingItem(
-          label: "Server Address [dns]",
+          label: "Server Address",
           child: Row(
             children: [
               SizedBox(

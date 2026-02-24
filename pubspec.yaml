@@ -1,4 +1,4 @@
-name: configui
+name: segacfg
 description: "A GUI for editing configs of Dniel97-segatools."
 
 publish_to: 'none'

@@ -7,11 +7,13 @@ import '../shared/vk.dart';
 class DeviceConfig extends StatefulWidget {
   final String projectPath;
   final String searchKeyword;
+  final bool isGlobalRelative;
 
   const DeviceConfig({
     super.key,
     required this.projectPath,
     this.searchKeyword = "",
+    required this.isGlobalRelative,
   });
 
   @override
@@ -21,8 +23,6 @@ class DeviceConfig extends StatefulWidget {
 class DeviceConfigState extends State<DeviceConfig> {
   final TextEditingController _aimePathController = TextEditingController();
   final TextEditingController _scanController = TextEditingController();
-    String _scanKeyName = "Default";
-
   bool _isLoading = true;
   bool _aimeEnable = false;
   bool _vfdEnable = false;
@@ -58,10 +58,7 @@ class DeviceConfigState extends State<DeviceConfig> {
             if (k == 'enable') _aimeEnable = (v == '1');
             if (k == 'aimePath') _aimePathController.text = v;
             if (k == 'highBaud') _highBaud = (v == '1');
-            if (k == 'scan') {
-              _scanController.text = v;
-              _scanKeyName = VKMapper.getKeyNameFromHex(v);
-            }
+            if (k == 'scan') _scanController.text = v;
           } else if (currentSection == "[vfd]") {
             if (k == 'enable') _vfdEnable = (v == '1');
           }
@@ -70,6 +67,121 @@ class DeviceConfigState extends State<DeviceConfig> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _showCreateTxtDialog() {
+    final nameController = TextEditingController();
+    final cardController = TextEditingController();
+    final pathController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final bool isCardValid = RegExp(r'^\d{20}$').hasMatch(cardController.text);
+          final bool isReady = nameController.text.isNotEmpty &&
+              isCardValid &&
+              pathController.text.isNotEmpty;
+
+          return ContentDialog(
+            title: const Text('Create Card File'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                InfoLabel(
+                  label: 'FILE NAME',
+                  child: TextBox(
+                    controller: nameController,
+                    placeholder: 'e.g. card',
+                    suffix: const Padding(
+                      padding: EdgeInsets.only(right: 8),
+                      child: Text('.txt', style: TextStyle(color: Colors.grey)),
+                    ),
+                    onChanged: (_) => setDialogState(() {}),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                InfoLabel(
+                  label: 'CARD NUMBER (20 DIGITS)',
+                  child: TextBox(
+                    controller: cardController,
+                    placeholder: '20-digit numeric only',
+                    maxLength: 20,
+                    unfocusedColor: !isCardValid && cardController.text.isNotEmpty ? Colors.red : null,
+                    suffix: !isCardValid && cardController.text.isNotEmpty
+                        ? Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Icon(FluentIcons.error, color: Colors.red, size: 14),
+                    )
+                        : null,
+                    onChanged: (_) => setDialogState(() {}),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                InfoLabel(
+                  label: 'SAVE TO',
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextBox(
+                          controller: pathController,
+                          placeholder: 'Select target folder',
+                          onChanged: (_) => setDialogState(() {}),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Button(
+                        child: const Icon(FluentIcons.folder_search),
+                        onPressed: () async {
+                          String? result = await FilePicker.platform.getDirectoryPath();
+                          if (result != null) {
+                            setDialogState(() {
+                              if (widget.isGlobalRelative) {
+                                pathController.text = p.relative(result, from: widget.projectPath);
+                              } else {
+                                pathController.text = p.normalize(result);
+                              }
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              Button(
+                child: const Text('Cancel'),
+                onPressed: () => Navigator.pop(context),
+              ),
+              FilledButton(
+                onPressed: isReady ? () async {
+                  try {
+                    String baseDir = pathController.text;
+                    if (widget.isGlobalRelative) {
+                      baseDir = p.normalize(p.join(widget.projectPath, pathController.text));
+                    }
+                    final fullPath = p.join(baseDir, "${nameController.text}.txt");
+                    final file = File(fullPath);
+                    if (!await file.parent.exists()) await file.parent.create(recursive: true);
+                    await file.writeAsString(cardController.text);
+
+                    setState(() {
+                      _aimePathController.text = widget.isGlobalRelative
+                          ? p.relative(fullPath, from: widget.projectPath)
+                          : fullPath;
+                    });
+                    if (context.mounted) Navigator.pop(context);
+                  } catch (_) {}
+                } : null,
+                child: const Text('Create'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
   }
 
   Map<String, Map<String, String>> getConfigData() {
@@ -84,37 +196,6 @@ class DeviceConfigState extends State<DeviceConfig> {
         'enable': _vfdEnable ? '1' : '0',
       }
     };
-  }
-
-  void _startListening() {
-    showDialog(
-      context: context,
-      builder: (context) => ContentDialog(
-        title: const Text('Now Waiting...'),
-        content: const Text('Press any button to bind'),
-        actions: [
-          Button(
-              child: const Text('Cancel'),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
-      ),
-    );
-
-    VKMapper.listenForNextKey(
-      onDetected: (hex, name) {
-        if (mounted) {
-          setState(() {
-            _scanController.text = hex;
-            _scanKeyName = name;
-          });
-          if (Navigator.canPop(context)) Navigator.pop(context);
-        }
-      },
-      onCancel: () {
-        if (mounted && Navigator.canPop(context)) Navigator.pop(context);
-      },
-    );
   }
 
   Widget _buildHighlightedText(String text, String keyword) {
@@ -185,6 +266,19 @@ class DeviceConfigState extends State<DeviceConfig> {
   Widget build(BuildContext context) {
     if (_isLoading) return const SizedBox.shrink();
 
+    final labels = [
+      "Device settings",
+      "Enable Aime Reader",
+      "High Baud Rate",
+      "Aime Path",
+      "Scan Key",
+      "Enable VFD"
+    ];
+    final bool hasMatch = widget.searchKeyword.isEmpty ||
+        labels.any((l) => l.toLowerCase().contains(widget.searchKeyword.toLowerCase()));
+
+    if (!hasMatch) return const SizedBox.shrink();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -204,9 +298,14 @@ class DeviceConfigState extends State<DeviceConfig> {
           ),
         ),
         _buildSettingItem(
-          label: "Aime Path (aimePath)",
+          label: "Aime Path",
           child: Row(children: [
             Expanded(child: TextBox(controller: _aimePathController)),
+            const SizedBox(width: 8),
+            Button(
+              child: const Icon(FluentIcons.add),
+              onPressed: _showCreateTxtDialog,
+            ),
             const SizedBox(width: 8),
             Button(
               child: const Icon(FluentIcons.file_system),
@@ -214,7 +313,12 @@ class DeviceConfigState extends State<DeviceConfig> {
                 FilePickerResult? result = await FilePicker.platform.pickFiles();
                 if (result != null) {
                   setState(() {
-                    _aimePathController.text = p.relative(result.files.single.path!, from: widget.projectPath);
+                    String pickedPath = result.files.single.path!;
+                    if (widget.isGlobalRelative) {
+                      _aimePathController.text = p.relative(pickedPath, from: widget.projectPath);
+                    } else {
+                      _aimePathController.text = p.normalize(pickedPath);
+                    }
                   });
                 }
               },
@@ -230,10 +334,12 @@ class DeviceConfigState extends State<DeviceConfig> {
                 readOnly: true,
               ),
             ),
-            _buildKeyDisplay(_scanKeyName),
+            _buildKeyDisplay(VKMapper.parse(_scanController.text)),
             Button(
               child: const Icon(FluentIcons.keyboard_classic),
-              onPressed: _startListening,
+              onPressed: () => VKMapper.scan(context, (hex) {
+                setState(() => _scanController.text = hex);
+              }),
             )
           ]),
         ),

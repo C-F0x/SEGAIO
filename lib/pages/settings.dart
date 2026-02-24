@@ -24,7 +24,7 @@ class _SettingsPageState extends State<SettingsPage> {
     try {
       final appData = Platform.environment['APPDATA'];
       if (appData == null) return;
-      final path = p.join(appData, 'configui');
+      final path = p.join(appData, 'segacfg');
       final dir = Directory(path);
       if (!await dir.exists()) await dir.create(recursive: true);
       await Process.run('explorer.exe', [path]);

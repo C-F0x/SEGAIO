@@ -93,47 +93,19 @@ class InputConfigState extends State<InputConfig> {
     return result;
   }
 
-  void _startListening(TextEditingController controller) {
-    showDialog(
-      context: context,
-      builder: (context) => ContentDialog(
-        title: const Text('等待按键录入'),
-        content: const Text('请按下键盘上的任意按键...'),
-        actions: [
-          Button(
-            child: const Text('取消'),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
-      ),
-    );
-
-    VKMapper.listenForNextKey(
-      onDetected: (hex, name) {
-        if (mounted) {
-          setState(() {
-            controller.text = hex;
-          });
-          if (Navigator.canPop(context)) Navigator.pop(context);
-        }
-      },
-      onCancel: () {
-        if (mounted && Navigator.canPop(context)) Navigator.pop(context);
-      },
-    );
-  }
-
   Widget _buildClickableBlock({
     required String label,
     required TextEditingController controller,
     required Color activeColor,
   }) {
-    String keyName = VKMapper.getKeyNameFromHex(controller.text);
+    String keyName = VKMapper.parse(controller.text);
     bool hasKey = controller.text.isNotEmpty && controller.text != "0x00";
 
     return Expanded(
       child: GestureDetector(
-        onTap: () => _startListening(controller),
+        onTap: () => VKMapper.scan(context, (hex) {
+          setState(() => controller.text = hex);
+        }),
         child: MouseRegion(
           cursor: SystemMouseCursors.click,
           child: Container(
@@ -200,7 +172,7 @@ class InputConfigState extends State<InputConfig> {
   }
 
   Widget _buildIo3Item(String label, TextEditingController controller) {
-    String keyName = VKMapper.getKeyNameFromHex(controller.text);
+    String keyName = VKMapper.parse(controller.text);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
@@ -225,7 +197,9 @@ class InputConfigState extends State<InputConfig> {
                 const SizedBox(width: 8),
                 Button(
                   child: const Icon(FluentIcons.keyboard_classic),
-                  onPressed: () => _startListening(controller),
+                  onPressed: () => VKMapper.scan(context, (hex) {
+                    setState(() => controller.text = hex);
+                  }),
                 ),
               ],
             ),
@@ -239,80 +213,94 @@ class InputConfigState extends State<InputConfig> {
   Widget build(BuildContext context) {
     if (_isLoading) return const SizedBox.shrink();
 
+    final List<String> searchTargets = [
+      "Input", "io3", "test", "service", "coin", "ir", "slider", "cell", "air"
+    ];
+    final bool hasMatch = widget.searchKeyword.isEmpty ||
+        searchTargets.any((target) => target.toLowerCase().contains(widget.searchKeyword.toLowerCase()));
+
+    if (!hasMatch) return const SizedBox.shrink();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader("Input settings", FluentIcons.button_control),
-        ..._io3Controllers.entries.map((e) => _buildIo3Item(e.key.toUpperCase(), e.value)),
+        ..._io3Controllers.entries.where((e) =>
+        widget.searchKeyword.isEmpty || e.key.toLowerCase().contains(widget.searchKeyword.toLowerCase())
+        ).map((e) => _buildIo3Item(e.key.toUpperCase(), e.value)),
 
         const SizedBox(height: 20),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              flex: 15,
-              child: Column(
-                children: [
-                  _buildSectionHeader("[ir]", FluentIcons.hands_free),
-                  ToggleSwitch(
-                    checked: _uiIrEnabled,
-                    onChanged: (v) => setState(() => _uiIrEnabled = v),
-                    content: const Text("Enable"),
-                  ),
-                  if (_uiIrEnabled)
-                    Container(
-                      height: 360,
-                      margin: const EdgeInsets.only(top: 10),
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Column(
-                        children: List.generate(6, (index) {
-                          int num = 6 - index;
-                          return _buildClickableBlock(
-                            label: "AIR $num",
-                            controller: _irControllers['ir$num']!,
-                            activeColor: const Color(0xFF00FFFF).withOpacity(0.6),
-                          );
-                        }),
-                      ),
+            if (widget.searchKeyword.isEmpty || "ir".contains(widget.searchKeyword.toLowerCase()) || "air".contains(widget.searchKeyword.toLowerCase()))
+              Expanded(
+                flex: 15,
+                child: Column(
+                  children: [
+                    _buildSectionHeader("[ir]", FluentIcons.hands_free),
+                    ToggleSwitch(
+                      checked: _uiIrEnabled,
+                      onChanged: (v) => setState(() => _uiIrEnabled = v),
+                      content: const Text("Enable"),
                     ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 20),
-            Expanded(
-              flex: 85,
-              child: Column(
-                children: [
-                  _buildSectionHeader("[slider]", FluentIcons.touch),
-                  ToggleSwitch(
-                    checked: _sliderEnable,
-                    onChanged: (v) => setState(() => _sliderEnable = v),
-                    content: const Text("Enable"),
-                  ),
-                  if (_sliderEnable)
-                    Container(
-                      height: 360,
-                      margin: const EdgeInsets.only(top: 10),
-                      child: Column(
-                        children: List.generate(2, (row) {
-                          return Expanded(
-                            child: Row(
-                              children: List.generate(16, (col) {
-                                int cellNum = (15 - col) * 2 + (row + 1);
-                                return _buildClickableBlock(
-                                  label: "$cellNum",
-                                  controller: _sliderControllers['cell$cellNum']!,
-                                  activeColor: const Color(0xFFFFBF00).withOpacity(0.6),
-                                );
-                              }),
-                            ),
-                          );
-                        }),
+                    if (_uiIrEnabled)
+                      Container(
+                        height: 360,
+                        margin: const EdgeInsets.only(top: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Column(
+                          children: List.generate(6, (index) {
+                            int num = 6 - index;
+                            return _buildClickableBlock(
+                              label: "AIR $num",
+                              controller: _irControllers['ir$num']!,
+                              activeColor: const Color(0xFF00FFFF).withOpacity(0.6),
+                            );
+                          }),
+                        ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
-            ),
+            if (widget.searchKeyword.isEmpty || "ir".contains(widget.searchKeyword.toLowerCase()) || "air".contains(widget.searchKeyword.toLowerCase()))
+              if (widget.searchKeyword.isEmpty || "slider".contains(widget.searchKeyword.toLowerCase()) || "cell".contains(widget.searchKeyword.toLowerCase()))
+                const SizedBox(width: 20),
+            if (widget.searchKeyword.isEmpty || "slider".contains(widget.searchKeyword.toLowerCase()) || "cell".contains(widget.searchKeyword.toLowerCase()))
+              Expanded(
+                flex: 85,
+                child: Column(
+                  children: [
+                    _buildSectionHeader("[slider]", FluentIcons.touch),
+                    ToggleSwitch(
+                      checked: _sliderEnable,
+                      onChanged: (v) => setState(() => _sliderEnable = v),
+                      content: const Text("Enable"),
+                    ),
+                    if (_sliderEnable)
+                      Container(
+                        height: 360,
+                        margin: const EdgeInsets.only(top: 10),
+                        child: Column(
+                          children: List.generate(2, (row) {
+                            return Expanded(
+                              child: Row(
+                                children: List.generate(16, (col) {
+                                  int cellNum = (15 - col) * 2 + (row + 1);
+                                  return _buildClickableBlock(
+                                    label: "$cellNum",
+                                    controller: _sliderControllers['cell$cellNum']!,
+                                    activeColor: const Color(0xFFFFBF00).withOpacity(0.6),
+                                  );
+                                }),
+                              ),
+                            );
+                          }),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
           ],
         ),
       ],

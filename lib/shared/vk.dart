@@ -1,21 +1,21 @@
 import 'package:flutter/services.dart';
+import 'package:fluent_ui/fluent_ui.dart';
+import 'vk_lib.dart';
 
 class VKMapper {
-  static String getKeyNameFromHex(String hex, {KeyEvent? event}) {
+  static String parse(String? hex, {KeyEvent? event}) {
+    if (hex == null || !hex.startsWith("0x") || hex == "0x00") return "Not Set";
     try {
-      if (!hex.startsWith("0x")) return "未设置";
       int vk = int.parse(hex.substring(2), radix: 16);
 
       if (event != null) {
         final label = event.logicalKey.keyLabel;
-        if (label.isNotEmpty && !label.startsWith('Key ')) {
-          return label;
-        }
+        if (label.isNotEmpty && !label.startsWith('Key ')) return label;
       }
 
-      if (vk == 0x01) return "Mouse Left";
-      if (vk == 0x02) return "Mouse Right";
-      if (vk == 0x04) return "Mouse Middle";
+      if (VKLibrary.specialNames.containsKey(vk)) {
+        return VKLibrary.specialNames[vk]!;
+      }
 
       if ((vk >= 0x30 && vk <= 0x39) || (vk >= 0x41 && vk <= 0x5A)) {
         return String.fromCharCode(vk);
@@ -23,43 +23,58 @@ class VKMapper {
 
       return "Key $hex";
     } catch (_) {
-      return "未设置";
+      return "Not Set";
     }
   }
 
-  static String getHexFromKey(KeyEvent event) {
-    int vk = 0;
-    final int plane = event.logicalKey.keyId & 0xFF000000000;
-
-    if (plane == 0x02000000000) {
-      vk = event.logicalKey.keyId & 0x000FFFFFFFF;
-    } else if (plane == 0x00000000000) {
-      int code = event.logicalKey.keyId & 0x000FFFFFFFF;
-      vk = (code >= 97 && code <= 122) ? code - 32 : code;
-    } else {
-      vk = event.logicalKey.keyId & 0xFF;
-    }
-
-    return "0x${vk.toRadixString(16).padLeft(2, '0').toUpperCase()}";
-  }
-
-  static void listenForNextKey({
-    required Function(String hex, String name) onDetected,
-    required Function() onCancel,
-  }) {
+  static void scan(BuildContext context, Function(String hex) onDetected) {
     bool isHandled = false;
-
     bool handler(KeyEvent event) {
       if (isHandled || event is! KeyDownEvent) return false;
+
       isHandled = true;
 
-      final String hex = getHexFromKey(event);
-      final String name = getKeyNameFromHex(hex, event: event);
+      int vk = 0;
+      final int keyId = event.logicalKey.keyId;
 
-      onDetected(hex, name);
+      if (VKLibrary.flutterToWinVK.containsKey(keyId)) {
+        vk = VKLibrary.flutterToWinVK[keyId]!;
+      } else {
+        final int plane = keyId & 0xFF000000000;
+        if (plane == 0x00000000000) {
+          vk = keyId & 0x000FFFFFFFF;
+          if (vk >= 97 && vk <= 122) vk -= 32;
+        } else {
+          vk = keyId & 0xFF;
+        }
+      }
+
+      final String hex = "0x${vk.toRadixString(16).padLeft(2, '0').toUpperCase()}";
+
+      onDetected(hex);
+
+      if (Navigator.canPop(context)) Navigator.pop(context);
       HardwareKeyboard.instance.removeHandler(handler);
+
       return true;
     }
+
+    showDialog(
+      context: context,
+      builder: (context) => ContentDialog(
+        title: const Text('Now Waiting...'),
+        content: const Text('Press any button to bind'),
+        actions: [
+          Button(
+            child: const Text('Cancel'),
+            onPressed: () {
+              HardwareKeyboard.instance.removeHandler(handler);
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
+    );
 
     HardwareKeyboard.instance.addHandler(handler);
   }

@@ -6,9 +6,11 @@ import 'package:window_manager/window_manager.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart';
 
-import 'pages/overview_page.dart';
-import 'pages/settings_page.dart';
-import 'pages/config_page.dart';
+import 'pages/overview.dart';
+import 'pages/settings.dart';
+import 'pages/config.dart';
+import 'shared/project.dart';
+import 'shared/database.dart';
 import 'l10n/generated/app_localizations.dart';
 
 void main() async {
@@ -122,7 +124,7 @@ class _MainNavigationState extends State<MainNavigation> {
   void _handleProjectChanged() {
     _refreshList();
     setState(() {
-      _currentIndex = 0; 
+      _currentIndex = 0;
     });
   }
 

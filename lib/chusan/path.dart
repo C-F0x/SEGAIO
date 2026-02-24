@@ -6,11 +6,13 @@ import 'package:file_picker/file_picker.dart';
 class PathConfig extends StatefulWidget {
   final String projectPath;
   final String searchKeyword;
+  final bool isGlobalRelative;
 
   const PathConfig({
     super.key,
     required this.projectPath,
     this.searchKeyword = "",
+    required this.isGlobalRelative,
   });
 
   @override
@@ -23,8 +25,7 @@ class PathConfigState extends State<PathConfig> {
   final TextEditingController _appdataController = TextEditingController();
 
   bool _isLoading = true;
-  bool _isRelativeMode = false;
-  String? _amfsError, _optionError, _appdataError;
+  String? _amfsError, _optionError;
 
   @override
   void initState() {
@@ -68,7 +69,6 @@ class PathConfigState extends State<PathConfig> {
     setState(() {
       _amfsError = _checkDirContent(_amfsController.text, ['ICF1', 'ICF2']);
       _optionError = _checkDirContent(_optionController.text, ['A001']);
-      _appdataError = _checkDirContent(_appdataController.text, ['bin', 'data']);
     });
   }
 
@@ -92,7 +92,7 @@ class PathConfigState extends State<PathConfig> {
   }
 
   String _formatPath(String pickedPath) {
-    if (_isRelativeMode) {
+    if (widget.isGlobalRelative) {
       return p.relative(pickedPath, from: widget.projectPath);
     } else {
       return p.normalize(pickedPath);
@@ -144,14 +144,6 @@ class PathConfigState extends State<PathConfig> {
           Icon(i, size: 20, color: FluentTheme.of(context).accentColor),
           const SizedBox(width: 8),
           Text(t, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          const Spacer(),
-          const Text("SaveMode", style: TextStyle(fontSize: 12)),
-          const SizedBox(width: 8),
-          ToggleSwitch(
-            checked: _isRelativeMode,
-            onChanged: (v) => setState(() => _isRelativeMode = v),
-            content: Text(_isRelativeMode ? "Relative" : "Absolute", style: const TextStyle(fontSize: 12)),
-          ),
         ],
       ),
     );
@@ -187,6 +179,18 @@ class PathConfigState extends State<PathConfig> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) return const SizedBox.shrink();
+
+    final List<String> searchTargets = [
+      "Path settings",
+      "AMFS Path",
+      "Option Path",
+      "AppData Path",
+    ];
+
+    final bool hasMatch = widget.searchKeyword.isEmpty ||
+        searchTargets.any((l) => l.toLowerCase().contains(widget.searchKeyword.toLowerCase()));
+
+    if (!hasMatch) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -230,7 +234,6 @@ class PathConfigState extends State<PathConfig> {
         ),
         _buildSettingItem(
           label: "AppData Path",
-          error: _appdataError,
           child: Row(children: [
             Expanded(child: TextBox(controller: _appdataController, onChanged: (_) => _validateAll())),
             const SizedBox(width: 8),

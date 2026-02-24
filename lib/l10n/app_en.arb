@@ -18,6 +18,6 @@
   "overview": "Overview",
   "dataManagement": "Data Management",
   "configFolder": "Config Storage Location",
-  "configFolderDesc": "Project lists and logs are saved in %AppData%/configui",
+  "configFolderDesc": "Project lists and logs are saved in %AppData%/segacfg",
   "openFolder": "Open Folder"
 }

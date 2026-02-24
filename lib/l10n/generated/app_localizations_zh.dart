@@ -63,7 +63,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get configFolder => '配置文件存储位置';
 
   @override
-  String get configFolderDesc => '所有的项目列表和配置记录均保存在 %AppData%/configui 中';
+  String get configFolderDesc => '所有的项目列表和配置记录均保存在 %AppData%/segacfg 中';
 
   @override
   String get openFolder => '打开文件夹';
@@ -128,7 +128,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get configFolder => '配置檔案存儲位置';
 
   @override
-  String get configFolderDesc => '所有的項目列表和配置記錄均保存在 %AppData%/configui 中';
+  String get configFolderDesc => '所有的項目列表和配置記錄均保存在 %AppData%/segacfg 中';
 
   @override
   String get openFolder => '打開資料夾';

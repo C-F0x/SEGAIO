@@ -38,7 +38,7 @@ class OverviewPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "ConfiGui",
+                        "SEGA cfg",
                         style: theme.typography.title?.copyWith(fontWeight: FontWeight.w600),
                       ),
                       Text("${loc.version} 1.0.0 (Pre-release)"),
@@ -78,7 +78,7 @@ class OverviewPage extends StatelessWidget {
                 title: Text(loc.githubRepo),
                 subtitle: Text(loc.githubSub),
                 trailing: const Icon(FluentIcons.open_in_new_window, size: 12),
-                onPressed: () => launchUrl(Uri.parse('https://github.com/C-F0x/configui')),
+                onPressed: () => launchUrl(Uri.parse('https://github.com/C-F0x/segacfg')),
               ),
             ],
           ),

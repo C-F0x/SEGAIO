@@ -34,8 +34,8 @@ class InputConfigState extends State<InputConfig> {
       value: (_) => TextEditingController());
 
   bool _isLoading = true;
-  bool _uiIrEnabled = false;
-  bool _sliderEnable = false;
+  bool _keyboardBind = false;
+  bool _sliderEmulation = false;
 
   @override
   void initState() {
@@ -68,11 +68,14 @@ class InputConfigState extends State<InputConfig> {
           } else if (currentSection == "[ir]") {
             if (_irControllers.containsKey(k)) {
               _irControllers[k]!.text = v;
-              if (v != "0x00" && v.isNotEmpty) _uiIrEnabled = true;
+              if (v != "0x00" && v.isNotEmpty) _keyboardBind = true;
             }
           } else if (currentSection == "[slider]") {
-            if (k == 'enable') _sliderEnable = (v == '1');
-            if (_sliderControllers.containsKey(k)) _sliderControllers[k]!.text = v;
+            if (k == 'enable') _sliderEmulation = (v == '1');
+            if (_sliderControllers.containsKey(k)) {
+              _sliderControllers[k]!.text = v;
+              if (v != "0x00" && v.isNotEmpty) _keyboardBind = true;
+            }
           }
         }
       }
@@ -83,13 +86,19 @@ class InputConfigState extends State<InputConfig> {
 
   Map<String, Map<String, String>> getConfigData() {
     Map<String, Map<String, String>> result = {};
+
     result['io3'] = _io3Controllers.map((k, v) => MapEntry(k, v.text));
-    if (_uiIrEnabled) {
+
+    if (_keyboardBind) {
       result['ir'] = _irControllers.map((k, v) => MapEntry(k, v.text));
     }
-    Map<String, String> sliderData = {'enable': _sliderEnable ? '1' : '0'};
-    sliderData.addAll(_sliderControllers.map((k, v) => MapEntry(k, v.text)));
+
+    Map<String, String> sliderData = {'enable': _sliderEmulation ? '1' : '0'};
+    if (_keyboardBind) {
+      sliderData.addAll(_sliderControllers.map((k, v) => MapEntry(k, v.text)));
+    }
     result['slider'] = sliderData;
+
     return result;
   }
 
@@ -214,7 +223,7 @@ class InputConfigState extends State<InputConfig> {
     if (_isLoading) return const SizedBox.shrink();
 
     final List<String> searchTargets = [
-      "Input", "io3", "test", "service", "coin", "ir", "slider", "cell", "air"
+      "Input", "io3", "test", "service", "coin", "ir", "slider", "cell", "air", "emulation", "keyboard"
     ];
     final bool hasMatch = widget.searchKeyword.isEmpty ||
         searchTargets.any((target) => target.toLowerCase().contains(widget.searchKeyword.toLowerCase()));
@@ -229,25 +238,49 @@ class InputConfigState extends State<InputConfig> {
         widget.searchKeyword.isEmpty || e.key.toLowerCase().contains(widget.searchKeyword.toLowerCase())
         ).map((e) => _buildIo3Item(e.key.toUpperCase(), e.value)),
 
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (widget.searchKeyword.isEmpty || "ir".contains(widget.searchKeyword.toLowerCase()) || "air".contains(widget.searchKeyword.toLowerCase()))
-              Expanded(
-                flex: 15,
-                child: Column(
-                  children: [
-                    _buildSectionHeader("[ir]", FluentIcons.hands_free),
-                    ToggleSwitch(
-                      checked: _uiIrEnabled,
-                      onChanged: (v) => setState(() => _uiIrEnabled = v),
-                      content: const Text("Enable"),
-                    ),
-                    if (_uiIrEnabled)
+            ToggleSwitch(
+              checked: _sliderEmulation,
+              onChanged: (v) => setState(() => _sliderEmulation = v),
+              content: const Text("Slider Emulation"),
+            ),
+            const SizedBox(width: 24),
+            ToggleSwitch(
+              checked: _keyboardBind,
+              onChanged: (v) {
+                setState(() {
+                  _keyboardBind = v;
+                  if (!v) {
+                    for (var c in _irControllers.values) {
+                      c.clear();
+                    }
+                    for (var c in _sliderControllers.values) {
+                      c.clear();
+                    }
+                  }
+                });
+              },
+              content: const Text("KeyBoard Bind"),
+            ),
+          ],
+        ),
+
+        if (_keyboardBind)
+          Padding(
+            padding: const EdgeInsets.only(top: 20),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // IR Section
+                Expanded(
+                  flex: 15,
+                  child: Column(
+                    children: [
+                      _buildSectionHeader("[ir]", FluentIcons.hands_free),
                       Container(
                         height: 360,
-                        margin: const EdgeInsets.only(top: 10),
                         padding: const EdgeInsets.symmetric(horizontal: 4),
                         child: Column(
                           children: List.generate(6, (index) {
@@ -260,27 +293,18 @@ class InputConfigState extends State<InputConfig> {
                           }),
                         ),
                       ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            if (widget.searchKeyword.isEmpty || "ir".contains(widget.searchKeyword.toLowerCase()) || "air".contains(widget.searchKeyword.toLowerCase()))
-              if (widget.searchKeyword.isEmpty || "slider".contains(widget.searchKeyword.toLowerCase()) || "cell".contains(widget.searchKeyword.toLowerCase()))
                 const SizedBox(width: 20),
-            if (widget.searchKeyword.isEmpty || "slider".contains(widget.searchKeyword.toLowerCase()) || "cell".contains(widget.searchKeyword.toLowerCase()))
-              Expanded(
-                flex: 85,
-                child: Column(
-                  children: [
-                    _buildSectionHeader("[slider]", FluentIcons.touch),
-                    ToggleSwitch(
-                      checked: _sliderEnable,
-                      onChanged: (v) => setState(() => _sliderEnable = v),
-                      content: const Text("Enable"),
-                    ),
-                    if (_sliderEnable)
+                // Slider Section
+                Expanded(
+                  flex: 85,
+                  child: Column(
+                    children: [
+                      _buildSectionHeader("[slider]", FluentIcons.touch),
                       Container(
                         height: 360,
-                        margin: const EdgeInsets.only(top: 10),
                         child: Column(
                           children: List.generate(2, (row) {
                             return Expanded(
@@ -298,11 +322,12 @@ class InputConfigState extends State<InputConfig> {
                           }),
                         ),
                       ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-          ],
-        ),
+              ],
+            ),
+          ),
       ],
     );
   }

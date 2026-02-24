@@ -129,7 +129,7 @@ class LedConfigState extends State<LedConfig> {
     if (_isLoading) return const SizedBox.shrink();
 
     final List<String> searchTargets = [
-      "LED settings", "Enable LED Emulation", "Billboard LED", "Controller LED",
+      "LED settings", "LED Emulation", "Billboard LED", "Controller LED",
       "Pipe Output", "Serial Output", "OpeNITHM", "Serial Port", "Baud Rate"
     ];
     final bool hasMatch = widget.searchKeyword.isEmpty ||
@@ -141,7 +141,7 @@ class LedConfigState extends State<LedConfig> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader("LED settings", FluentIcons.lightbulb),
-        _buildSwitchItem("Enable LED Emulation", _led15093Enable, (v) => setState(() => _led15093Enable = v)),
+        _buildSwitchItem("LED Emulation", _led15093Enable, (v) => setState(() => _led15093Enable = v)),
 
         if (widget.searchKeyword.isEmpty ||
             "billboard led".contains(widget.searchKeyword.toLowerCase()) ||

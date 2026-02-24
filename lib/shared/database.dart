@@ -6,7 +6,7 @@ import 'project.dart';
 class JsonDbService {
   static Future<File> _getProjectFile() async {
     final appData = Platform.environment['APPDATA'];
-    final dirPath = p.join(appData!, 'segacfg');
+    final dirPath = p.join(appData!, 'org.cf0x');
     final directory = Directory(dirPath);
     if (!await directory.exists()) await directory.create(recursive: true);
     return File(p.join(dirPath, 'projects.json'));

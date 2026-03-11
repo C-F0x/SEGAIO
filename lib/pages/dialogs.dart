@@ -5,7 +5,6 @@ import 'package:path/path.dart' as p;
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import '../shared/project.dart';
-import '../shared/database.dart';
 
 class ProjectDialogs {
   static void showCreateDialog({

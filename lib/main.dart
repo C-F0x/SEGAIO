@@ -9,8 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'pages/overview.dart';
 import 'pages/settings.dart';
 import 'pages/config.dart';
-import 'shared/project.dart';
-import 'shared/database.dart';
+import 'revealer/selector.dart';
 import 'l10n/generated/app_localizations.dart';
 
 void main() async {
@@ -108,25 +107,6 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
-  List<Project> _projects = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _refreshList();
-  }
-  Future<void> _refreshList() async {
-    final list = await JsonDbService.loadProjects();
-    setState(() {
-      _projects = list;
-    });
-  }
-  void _handleProjectChanged() {
-    _refreshList();
-    setState(() {
-      _currentIndex = 0;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -143,38 +123,23 @@ class _MainNavigationState extends State<MainNavigation> {
         displayMode: PaneDisplayMode.auto,
         items: [
           PaneItem(
-              icon: const Icon(FluentIcons.home),
-              title: Text(loc.overview),
-              body: const OverviewPage()
+            icon: const Icon(FluentIcons.home),
+            title: Text(loc.overview),
+            body: const OverviewPage(),
           ),
-          PaneItemExpander(
-            key: const ValueKey('expander'),
+          PaneItem(
+            key: const ValueKey('config'),
             icon: const Icon(FluentIcons.page_list),
             title: Text(loc.manageConfig),
             body: ConfigPage(
               title: loc.manageConfig,
-              onProjectCreated: (_) => _handleProjectChanged(),
-              onProjectSelected: (project) {
-                final projectIndex = _projects.indexWhere((p) => p.id == project.id);
-                if (projectIndex != -1) {
-                  setState(() {
-                    _currentIndex = 1 + 1 + projectIndex;
-                  });
-                }
-              },
             ),
-            items: [
-              ..._projects.map((p) => PaneItem(
-                key: ValueKey(p.id),
-                icon: const Icon(FluentIcons.document_set),
-                title: Text(p.name),
-                body: ConfigPage(
-                  title: "编辑: ${p.name}",
-                  onProjectCreated: (_) => _handleProjectChanged(),
-                  onProjectSelected: null,
-                ),
-              )),
-            ],
+          ),
+          PaneItem(
+            key: const ValueKey('revealer'),
+            icon: const Icon(FluentIcons.view_all),
+            title: const Text('Revealer'),
+            body: const SelectorPage(),
           ),
         ],
         footerItems: [

@@ -1,5 +1,5 @@
-name: segacfg
-description: "A GUI for editing configs of Dniel97-segatools."
+name: SEGA_Kit
+description: "AIO tools for SEGA"
 
 publish_to: 'none'
 

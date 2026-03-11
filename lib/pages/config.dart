@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter/material.dart' show Material;
 import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
 import '../shared/project.dart';
@@ -10,13 +11,11 @@ import 'dialogs.dart';
 class ConfigPage extends StatefulWidget {
   final String title;
   final Function(Project)? onProjectCreated;
-  final Function(Project)? onProjectSelected;
 
   const ConfigPage({
     super.key,
     required this.title,
     this.onProjectCreated,
-    this.onProjectSelected,
   });
 
   @override
@@ -25,6 +24,7 @@ class ConfigPage extends StatefulWidget {
 
 class _ConfigPageState extends State<ConfigPage> {
   List<Project> _projects = [];
+  Project? _selectedProject;
   bool _isSaving = false;
   String _searchKeyword = "";
   bool _isGlobalRelative = false;
@@ -89,46 +89,42 @@ class _ConfigPageState extends State<ConfigPage> {
     }
   }
 
+  Widget _proxyDecorator(Widget child, int index, Animation<double> animation) {
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (BuildContext context, Widget? child) {
+        return Material(
+          color: Colors.transparent,
+          child: DefaultTextStyle(
+            style: FluentTheme.of(context).typography.body!.copyWith(inherit: true),
+            child: child!,
+          ),
+        );
+      },
+      child: child,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final bool isEditing = widget.title.startsWith("编辑: ");
-    final bool isCreating = widget.title.contains("创建");
-
-    if (isCreating) {
-      return ScaffoldPage(
-        header: const PageHeader(title: Text("NEW")),
-        content: Center(
-          child: FilledButton(
-              child: const Text("Constantly Create"),
-              onPressed: () => ProjectDialogs.showCreateDialog(
-                context: context,
-                currentProjects: _projects,
-                onSuccess: (newProject) async {
-                  setState(() => _projects.add(newProject));
-                  await JsonDbService.saveProjects(_projects);
-                  if (widget.onProjectCreated != null) widget.onProjectCreated!(newProject);
-                },
-              )
-          ),
-        ),
-      );
-    }
-
-    if (isEditing) {
-      final projectName = widget.title.replaceFirst("编辑: ", "");
-      Project? currentProject;
-      try {
-        currentProject = _projects.firstWhere((p) => p.name == projectName);
-      } catch (_) {
-        return const ScaffoldPage(content: Center(child: ProgressRing()));
-      }
-
+    if (_selectedProject != null) {
       return ScaffoldPage(
         header: PageHeader(
+          leading: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            child: IconButton(
+              icon: const Icon(FluentIcons.back),
+              onPressed: () => setState(() {
+                _selectedProject = null;
+                _searchKeyword = "";
+                _searchController.clear();
+              }),
+            ),
+          ),
           title: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Flexible(child: Text(currentProject.name, overflow: TextOverflow.ellipsis, maxLines: 1, style: const TextStyle(fontWeight: FontWeight.w600))),
+              Flexible(child: Text(_selectedProject!.name, overflow: TextOverflow.ellipsis, maxLines: 1, style: const TextStyle(fontWeight: FontWeight.w600))),
               const SizedBox(width: 12),
               Flexible(
                 child: ConstrainedBox(
@@ -187,15 +183,15 @@ class _ConfigPageState extends State<ConfigPage> {
                 child: Card(
                   child: ModifyPage(
                     key: _modifyKey,
-                    projectPath: currentProject.path,
-                    configData: currentProject.toJson(),
+                    projectPath: _selectedProject!.path,
+                    configData: _selectedProject!.toJson(),
                     searchKeyword: _searchKeyword,
                     isGlobalRelative: _isGlobalRelative,
                   ),
                 ),
               ),
               const SizedBox(height: 12),
-              _buildBottomBar(currentProject),
+              _buildBottomBar(_selectedProject!),
               const SizedBox(height: 12),
             ],
           ),
@@ -214,11 +210,15 @@ class _ConfigPageState extends State<ConfigPage> {
             onSuccess: (newProject) async {
               setState(() => _projects.add(newProject));
               await JsonDbService.saveProjects(_projects);
+              if (widget.onProjectCreated != null) widget.onProjectCreated!(newProject);
             },
           ),
         ),
       ),
       content: ReorderableListView.builder(
+        // 关键点：禁用默认的拖拽句柄，防止出现两个图标
+        buildDefaultDragHandles: false,
+        proxyDecorator: _proxyDecorator,
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
         itemCount: _projects.length,
         onReorder: _onReorder,
@@ -230,7 +230,7 @@ class _ConfigPageState extends State<ConfigPage> {
             child: Card(
               padding: EdgeInsets.zero,
               child: ListTile(
-                onPressed: () => widget.onProjectSelected?.call(item),
+                onPressed: () => setState(() => _selectedProject = item),
                 title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: Text("${item.type.toUpperCase()} | ${item.path}"),
                 trailing: Row(
@@ -251,8 +251,20 @@ class _ConfigPageState extends State<ConfigPage> {
                           }
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    ReorderableDragStartListener(index: index, child: const Padding(padding: EdgeInsets.all(8.0), child: Icon(FluentIcons.gripper_bar_vertical, color: Colors.grey))),
+                    const SizedBox(width: 12),
+                    // 使用自定义句柄
+                    ReorderableDragStartListener(
+                      index: index,
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.grab,
+                        child: Icon(
+                          FluentIcons.gripper_bar_vertical,
+                          color: FluentTheme.of(context).typography.caption?.color?.withOpacity(0.6),
+                          size: 16,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
                   ],
                 ),
               ),

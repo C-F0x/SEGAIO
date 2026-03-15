@@ -216,7 +216,6 @@ class _ConfigPageState extends State<ConfigPage> {
         ),
       ),
       content: ReorderableListView.builder(
-        // 关键点：禁用默认的拖拽句柄，防止出现两个图标
         buildDefaultDragHandles: false,
         proxyDecorator: _proxyDecorator,
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
@@ -252,7 +251,6 @@ class _ConfigPageState extends State<ConfigPage> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    // 使用自定义句柄
                     ReorderableDragStartListener(
                       index: index,
                       child: MouseRegion(

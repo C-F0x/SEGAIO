@@ -273,7 +273,6 @@ class InputConfigState extends State<InputConfig> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // IR Section
                 Expanded(
                   flex: 15,
                   child: Column(
@@ -297,7 +296,6 @@ class InputConfigState extends State<InputConfig> {
                   ),
                 ),
                 const SizedBox(width: 20),
-                // Slider Section
                 Expanded(
                   flex: 85,
                   child: Column(
